@@ -20,7 +20,18 @@ class ProductController
 
     private function processResourceRequest(string $method, string $id): void
     {
-    
+        $product = $this->gateway->get($id);
+
+        if(!$product){
+            http_response_code(404);
+            echo json_encode(["message" => "Product not found" ]);
+            return;
+        }
+        switch ($method){
+            case "GET":
+                echo json_encode($product);
+                break;
+        }
     }
 
     private function processCollectionRequest(string $method): void
@@ -30,9 +41,54 @@ class ProductController
                 echo json_encode([$this->gateway->getAll()]);
                 break;
                 
-                case "POST":
+                case "PATCH":
                     $data = (array) json_decode(file_get_contents("php://input"),true);
-                    var_dump($data);
+
+                    $this->getValidationErrors($data, false);
+                   
+                    if (!empty($errors))
+                    {
+                        http_response_code(422);
+                        echo json_encode(["errors"=>$errors]);
+                    }
+
+                    $rows = $this->gateway->update($product, $data);
+
+                    echo json_encode([
+                        "message" => "Item $id updated",
+                        "row" => $rows
+                    ]);
+                    break;
+                case "DELETE":
+                    $rows = $this->gateway->delete($id);
+
+                    echo json_encode([
+                        "message"=> "Item $id deleted",
+                        "rows"=> $rows
+                    ]);
+                    break;
+
+                    default:
+                    http_response_code(405);
+                    header("Allow: GET,PATCH,DELETE");
+
         }
+    }
+    private function getValidationErrors(array $data, bool $is_new = true ):array
+    {
+        $errors = [];
+        if($is_new && empty($data["name"]))
+        {
+            $errors[] = "name is required";
+        }
+
+        if(array_key_exists("phone", $data))
+        {
+            if(filter_var($data["size"],FILTER_VALIDATE_INT)===false)
+            {
+                $errors[]="phone must contain numbers";
+            }
+        }
+        return $errors;
     }
 }

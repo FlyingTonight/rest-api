@@ -31,4 +31,51 @@ class ProductGateway
         $stmt->execute();
         return $this->conn->lastInsertId();
     }
+
+    public function get(string $id): array
+    {
+        $sql = "SELECT * FROM item WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($data === false) {
+        
+            return []; 
+        }
+        
+        return $data;
+    }
+    public function update(array $current, array $new):int
+    {
+        $sql = "UPDATE product
+                SET name = :name, phone = :phone, key = :key
+                WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(":name",$new["name"] ?? $current["name"],
+        PDO::PARAM_STR);
+        $stmt->bindValue(":phone",$new["phone"] ?? $current["phone"],
+        PDO::PARAM_INT);
+        $stmt->bindValue(":key",$new["key"] ?? $current["key"],
+        PDO::PARAM_STR);
+
+        $stmt->bindValue(":id", $current["id"],PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        return $stmt->rowCount();
+    }
+    public function delete(string $id):int
+    {
+        $sql = "DELETE FROM item
+                WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+
+        $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        return $stmt->rowCount();
+    }
 }
