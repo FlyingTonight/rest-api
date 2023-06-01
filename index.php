@@ -13,6 +13,19 @@ set_exception_handler("ErrorHandler::handleException");
 
 header("Content-type: application/json; charset=UTF-8");
 
+// Verify the access token
+function verifyToken() {
+    $accessToken = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+
+    
+    if ($accessToken !== '297c9da8df37df03954c4db07af741f1ea5d7f2748eeab033c3016621f18ab98') {
+        http_response_code(401);
+        exit(json_encode(['message' => 'Unauthorized']));
+    }
+}
+
+verifyToken();
+
 $parts = explode("/", $_SERVER["REQUEST_URI"]);
 
 if ($parts[1] != "products") {
